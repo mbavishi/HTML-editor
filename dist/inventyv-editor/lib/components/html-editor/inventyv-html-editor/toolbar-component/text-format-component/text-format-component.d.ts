@@ -1,6 +1,7 @@
+import { EditorView } from 'prosemirror-view';
 import * as i0 from "@angular/core";
 export declare class TextFormatComponent {
-    content: any;
+    content: EditorView;
     toggleBold(): void;
     toggleItalic(): void;
     toggleUnderLine(): void;
