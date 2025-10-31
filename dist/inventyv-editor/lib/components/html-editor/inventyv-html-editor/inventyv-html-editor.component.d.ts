@@ -7,7 +7,7 @@ export declare class InventyvHtmlEditorComponent {
     html: EditorView;
     ngOnInit(): void;
     loadTemplate(template: string | null): void;
-    setContentFromHTML(html: string | null): void;
+    setContentFromHTML(html: string): void;
     getHTML(): string;
     static ɵfac: i0.ɵɵFactoryDeclaration<InventyvHtmlEditorComponent, never>;
     static ɵcmp: i0.ɵɵComponentDeclaration<InventyvHtmlEditorComponent, "lib-inventyv-html-editor", never, { "contentTemplate": { "alias": "contentTemplate"; "required": false; }; }, {}, never, never, true, never>;
