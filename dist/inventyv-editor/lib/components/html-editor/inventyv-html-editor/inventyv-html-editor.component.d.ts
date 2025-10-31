@@ -1,11 +1,11 @@
-import { ElementRef } from '@angular/core';
+import { AfterViewInit, ElementRef } from '@angular/core';
 import { EditorView } from 'prosemirror-view';
 import * as i0 from "@angular/core";
-export declare class InventyvHtmlEditorComponent {
+export declare class InventyvHtmlEditorComponent implements AfterViewInit {
     editorHost: ElementRef<HTMLDivElement>;
     contentTemplate: string;
     html: EditorView;
-    ngOnInit(): void;
+    ngAfterViewInit(): void;
     loadTemplate(template: string | null): void;
     setContentFromHTML(html: string): void;
     getHTML(): string;

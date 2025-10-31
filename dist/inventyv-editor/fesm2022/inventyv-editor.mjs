@@ -910,7 +910,7 @@ class InventyvHtmlEditorComponent {
     editorHost;
     contentTemplate;
     html;
-    ngOnInit() {
+    ngAfterViewInit() {
         console.log("Content template ", this.contentTemplate);
         const state = EditorState.create({
             schema: editorSchema,
@@ -928,18 +928,21 @@ class InventyvHtmlEditorComponent {
         this.setContentFromHTML(this.contentTemplate);
     }
     loadTemplate(template) {
+        console.log("Loading template ", template);
         if (!template)
             return;
         this.contentTemplate = template;
         this.setContentFromHTML(template);
     }
     setContentFromHTML(html) {
+        console.log("Setting content from HTML ", html);
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const pmDoc = DOMParser$1.fromSchema(this.html.state.schema).parse(doc.body);
         const tr = this.html.state.tr.replaceWith(0, this.html.state.doc.content.size, pmDoc);
         this.html.dispatch(tr);
     }
     getHTML() {
+        console.log("Getting HTML content");
         const serializer = DOMSerializer.fromSchema(this.html.state.schema);
         const fragment = serializer.serializeFragment(this.html.state.doc.content);
         const wrapper = document.createElement('div');
