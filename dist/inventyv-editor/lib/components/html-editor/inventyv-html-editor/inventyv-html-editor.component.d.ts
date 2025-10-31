@@ -3,10 +3,9 @@ import { EditorView } from 'prosemirror-view';
 import * as i0 from "@angular/core";
 export declare class InventyvHtmlEditorComponent {
     editorHost: ElementRef<HTMLDivElement>;
-    contentTemplate: string | null;
+    contentTemplate: string;
     html: EditorView;
-    blank: string;
-    ngOnInit(): void;
+    ngAfterViewInit(): void;
     loadTemplate(template: string | null): void;
     setContentFromHTML(html: string | null): void;
     getHTML(): string;

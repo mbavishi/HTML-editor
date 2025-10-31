@@ -903,40 +903,9 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImpo
 class InventyvHtmlEditorComponent {
     editorHost;
     // @Input() html: EditorView;
-    contentTemplate = "<h1>Hello!</h1><p>Edit this content as you like.</p>";
+    contentTemplate;
     html;
-    blank = `
-<p><b>Bold</b> <i> Italic</i> <u> Underline</u> <s> Strikethrough</s></p>
-
-<h2 style="font-family: 'Georgia';">Fonts & Sizes</h2>
-<p style="font-family: 'Courier New'; font-size: 20px;">I use a different <b>font family</b> and <b>size</b> to look unique!</p>
-
-<p>
- <b>Subscript:</b> H<sub>2</sub>O <b>Superscript:</b> E = mc<sup>2</sup>
-</p>
-<p style="color: red;">Text Red</p>
-<p style="background-color: yellow;">Yellow Background</b></p>
-
-<div><p style="text-align:left;">Alignment</p></div>
-<p style="margin-left:40px;">Indentation</p>
-<h2>Lists :</h2>
-  <p>First</p>
-  <p>Second</p>
-  <p>Third</p>
-
-<h2>Links & Images</h2>
-<p>
-  <a href="https://crm.mytaxprepoffice.com/login" target="_blank"><b>Visit CRM</b></a>
-  <i>(Select for remove)</i>
-</p>
-
-<p style="text-align:left;">
-  <img src="https://static.wixstatic.com/media/6f0edd_dd8e228109c44e3fbcfa180bc7d9fdec~mv2.png/v1/fill/w_110,h_66,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/MTPO%20Orange.png"
-       alt="MyTaxPrepOffice" width="100" style="border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.2);" />
-</p>
-`;
-    // contentTemplate: string = this.blank;
-    ngOnInit() {
+    ngAfterViewInit() {
         console.log("Content template ", this.contentTemplate);
         const state = EditorState.create({
             schema: editorSchema,
@@ -975,11 +944,11 @@ class InventyvHtmlEditorComponent {
         return wrapper.innerHTML;
     }
     static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
-    static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: InventyvHtmlEditorComponent, isStandalone: true, selector: "lib-inventyv-html-editor", inputs: { contentTemplate: "contentTemplate" }, viewQueries: [{ propertyName: "editorHost", first: true, predicate: ["editorHost"], descendants: true, static: true }], ngImport: i0, template: "<p>inventyv-html-editor works!</p>\n<div class=\"row\">\n        <div class=\"col-1\"></div>\n        <div class=\"col-10\">\n            <!-- Toolbar -->\n            <app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n            <!-- Editor Area -->\n            <div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>\n        </div>\n    </div>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"], dependencies: [{ kind: "component", type: ToolbarComponent, selector: "app-toolbar-component", inputs: ["content"] }, { kind: "ngmodule", type: FormsModule }] });
+    static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: InventyvHtmlEditorComponent, isStandalone: true, selector: "lib-inventyv-html-editor", inputs: { contentTemplate: "contentTemplate" }, viewQueries: [{ propertyName: "editorHost", first: true, predicate: ["editorHost"], descendants: true, static: true }], ngImport: i0, template: "<p>inventyv-html-editor works!</p>\n<!-- Toolbar -->\n<app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"], dependencies: [{ kind: "component", type: ToolbarComponent, selector: "app-toolbar-component", inputs: ["content"] }, { kind: "ngmodule", type: FormsModule }] });
 }
 i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, decorators: [{
             type: Component,
-            args: [{ selector: 'lib-inventyv-html-editor', standalone: true, imports: [NgFor, ToolbarComponent, FormsModule], template: "<p>inventyv-html-editor works!</p>\n<div class=\"row\">\n        <div class=\"col-1\"></div>\n        <div class=\"col-10\">\n            <!-- Toolbar -->\n            <app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n            <!-- Editor Area -->\n            <div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>\n        </div>\n    </div>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"] }]
+            args: [{ selector: 'lib-inventyv-html-editor', standalone: true, imports: [NgFor, ToolbarComponent, FormsModule], template: "<p>inventyv-html-editor works!</p>\n<!-- Toolbar -->\n<app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"] }]
         }], propDecorators: { editorHost: [{
                 type: ViewChild,
                 args: ['editorHost', { static: true }]
