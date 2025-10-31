@@ -52,7 +52,12 @@
     "ng-packagr": "^20.3.0",
     "typescript": "~5.8.2"
   },
+  "module": "./dist/inventyv-editor/fesm2022/inventyv-editor.mjs",
+  "typings": "./dist/inventyv-editor/index.d.ts",
   "exports": {
-    "./*": "./dist/*"
+    ".": {
+      "types": "./dist/inventyv-editor/index.d.ts",
+      "default": "./dist/inventyv-editor/fesm2022/inventyv-editor.mjs"
+    }
   }
 }
