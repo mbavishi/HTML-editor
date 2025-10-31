@@ -919,13 +919,19 @@ class InventyvHtmlEditorComponent {
         this.html = new EditorView(this.editorHost.nativeElement, {
             state,
             dispatchTransaction: tr => {
+                console.log("Transaction ", tr);
+                // Apply the transaction
+                console.log("Current state before transaction ", this.html.state);
                 const newState = this.html.state.apply(tr);
                 this.html.updateState(newState);
                 this.contentTemplate = this.getHTML();
             }
         });
         // Load initial HTML
-        this.setContentFromHTML(this.contentTemplate);
+        setTimeout(() => {
+            console.log("Setting initial content from template ", this.contentTemplate);
+            this.setContentFromHTML(this.contentTemplate);
+        }, 0);
     }
     loadTemplate(template) {
         console.log("Loading template ", template);
