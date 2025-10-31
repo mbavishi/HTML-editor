@@ -937,6 +937,7 @@ class InventyvHtmlEditorComponent {
 `;
     // contentTemplate: string = this.blank;
     ngOnInit() {
+        console.log("Content template ", this.contentTemplate);
         const state = EditorState.create({
             schema: editorSchema,
             plugins: editorPlugins
