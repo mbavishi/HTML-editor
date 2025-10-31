@@ -1,329 +1,17 @@
 import * as i0 from '@angular/core';
 import { Input, Component, Injectable, ViewChild } from '@angular/core';
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import { Schema, DOMParser as DOMParser$1, DOMSerializer } from 'prosemirror-model';
-import { schema } from 'prosemirror-schema-basic';
-import { addListNodes, liftListItem, wrapInList, sinkListItem } from 'prosemirror-schema-list';
-import { tableNodes, columnResizing, tableEditing } from 'prosemirror-tables';
-import { keymap } from 'prosemirror-keymap';
-import { toggleMark, baseKeymap, setBlockType } from 'prosemirror-commands';
-import { undo, redo, history } from 'prosemirror-history';
 import { Plugin, EditorState } from 'prosemirror-state';
+import { Schema, DOMParser as DOMParser$1, DOMSerializer } from 'prosemirror-model';
 import * as i1 from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { NgFor, NgIf } from '@angular/common';
-
-// with required cellAttributes
-const myTableNodes = tableNodes({
-    tableGroup: 'block',
-    cellContent: 'block+',
-    cellAttributes: {
-        style: { default: null },
-        class: { default: null },
-        backgroundColor: {
-            default: null, getFromDOM(dom) {
-                return dom.style.backgroundColor || null;
-            },
-            setDOMAttr(value, attrs) {
-                if (value)
-                    attrs['style'] = (attrs['style'] || "") + `background-color:${value};`;
-            }
-        },
-    },
-});
-// MARKS DEFINITIONS
-// Font family
-const fontFamilyMark = {
-    attrs: { font: { default: null } },
-    parseDOM: [{ style: 'font-family', getAttrs: (value) => ({ font: value }) }],
-    toDOM: mark => ['span', { style: `font-family: ${mark.attrs['font']}` }, 0]
-};
-// Text color and background color
-const COLORS = [
-    '#b71c1c', '#d32f2f', '#e53935', '#f46136', '#f57c00', '#ff9800', '#ffb200', '#ffeb3b', '#333',
-    '#1b5e20', '#388e3c', '#4caf50', '#81c784', '#0d47a1', '#1976d2', '#2196f3', '#64b5f6'
-];
-function createColorMark(name, cssProp) {
-    return {
-        attrs: { color: {} },
-        parseDOM: COLORS.map(c => ({ style: cssProp, getAttrs: value => ({ color: value }) })),
-        toDOM: node => ['span', { style: `${cssProp}: ${node.attrs['color']}` }, 0]
-    };
-}
-// Link mark
-const linkMark = {
-    attrs: { href: {}, title: { default: null }, class: { default: null }, style: { default: null }, target: { default: '_blank' } },
-    inclusive: false,
-    parseDOM: [{
-            tag: 'a[href]',
-            getAttrs(dom) {
-                return {
-                    href: dom.getAttribute('href'),
-                    title: dom.getAttribute('title'),
-                    class: dom.getAttribute('class'),
-                    style: dom.getAttribute('style'),
-                    target: dom.getAttribute('target') || '_blank',
-                };
-            }
-        }],
-    toDOM(node) {
-        return ['a', { ...node.attrs }, 0];
-    }
-};
-// NODE DEFINITIONS
-// Paragraph with alignment
-const paragraphWithAlignAndIndent = {
-    ...schema.spec.nodes.get('paragraph'),
-    attrs: { align: { default: 'left' }, indent: { default: 0 } },
-    parseDOM: [{ tag: 'p', getAttrs: (dom) => ({ align: dom.style.textAlign || 'left', indent: parseInt(dom.style.marginLeft) / 30 || 0 }) }],
-    toDOM: (node) => ['p', { style: `text-align:${node.attrs.align}; margin-left:${node.attrs.indent * 30}px` }, 0]
-};
-// Heading with alignment
-const headingWithAlign = {
-    ...schema.spec.nodes.get('heading'),
-    attrs: { ...schema.spec.nodes.get('heading')?.attrs, align: { default: 'left' } },
-    parseDOM: Array.from({ length: 6 }).map((_, i) => ({
-        tag: `h${i + 1}`,
-        getAttrs: (dom) => ({ level: i + 1, align: dom.style.textAlign || 'left' })
-    })),
-    toDOM: (node) => [`h${node.attrs.level}`, { style: `text-align:${node.attrs.align}` }, 0]
-};
-// Image node (resizable via style max-width)
-const imageNode = {
-    inline: true,
-    attrs: { src: {}, alt: { default: null }, title: { default: null }, width: { default: 'auto' }, height: { default: 'auto' }, align: { default: 'center' } },
-    group: 'inline',
-    draggable: true,
-    parseDOM: [{
-            tag: 'img[src]',
-            getAttrs: (dom) => ({
-                src: dom.getAttribute('src'),
-                title: dom.getAttribute('title'),
-                alt: dom.getAttribute('alt'),
-                width: dom.getAttribute('width'),
-                height: dom.getAttribute('height'),
-                align: dom.style.textAlign || 'center',
-            })
-        }],
-    toDOM: (node) => ['img', {
-            src: node.attrs.src,
-            title: node.attrs.title,
-            alt: node.attrs.alt,
-            width: node.attrs.width,
-            height: node.attrs.height,
-            style: 'max-width: {node.attrs.width}; height: {node.attrs.height}; cursor:nwse-resize; text-align:${node.attrs.align}',
-        }]
-};
-// const imageNode: NodeSpec = {
-//     inline: true,
-//     group: 'inline',
-//     draggable: true,
-//     attrs: {
-//         src: {},
-//         alt: { default: null },
-//         title: { default: null },
-//         width: { default: null },
-//         height: { default: null },
-//         align: { default: 'center' },
-//     },
-//     parseDOM: [{
-//         tag: 'img[src]',
-//         getAttrs(dom: HTMLElement) {
-//             return {
-//                 src: dom.getAttribute('src'),
-//                 title: dom.getAttribute('title'),
-//                 alt: dom.getAttribute('alt'),
-//                 width: dom.getAttribute('width'),
-//                 height: dom.getAttribute('height'),
-//                 align: dom.getAttribute('align') || 'center',
-//             };
-//         },
-//     }],
-//     toDOM(node) {
-//         return ['img', {
-//             src: node.attrs['src'],
-//             title: node.attrs['title'],
-//             alt: node.attrs['alt'],
-//             width: node.attrs['width'] || undefined,
-//             height: node.attrs['height'] || undefined,
-//             style: `display:block; margin:0 auto; max-width:${node.attrs['width'] || '100%'}; height:${node.attrs['height'] || 'auto'};
-//                     text-align:${node.attrs['align']}; cursor: nwse-resize;`
-//             .trim(),
-//         }];
-//     },
-// };
-// MARKS COLLECTION
-let marks = schema.spec.marks;
-// remove
-//     ? basicSchema.spec.marks.remove('size')
-//     : basicSchema.spec.marks;
-marks = marks
-    .update('sup', { parseDOM: [{ tag: 'sup' }], toDOM: () => ['sup', 0] })
-    .update('sub', { parseDOM: [{ tag: 'sub' }], toDOM: () => ['sub', 0] })
-    .update('bold', { parseDOM: [{ tag: 'strong' }, { style: 'font-weight', getAttrs: v => v === 'bold' && null }], toDOM: () => ['strong', 0] })
-    .update('italic', { parseDOM: [{ tag: 'em' }, { style: 'font-style', getAttrs: v => v === 'italic' && null }], toDOM: () => ['em', 0] })
-    .update('underline', { parseDOM: [{ tag: 'u' }, { style: 'text-decoration', getAttrs: v => v === 'underline' && null }], toDOM: () => ['u', 0] })
-    .update('strike', { parseDOM: [{ tag: 's' }, { tag: 'del' }, { style: 'text-decoration', getAttrs: v => v === 'line-through' && null }], toDOM: () => ['s', 0] })
-    .update('bgColor', createColorMark('bgColor', 'background-color'))
-    .update('textColor', createColorMark('textColor', 'color'))
-    .update('fontFamily', fontFamilyMark)
-    .update('link', linkMark)
-    .update('fontSize', {
-    attrs: { size: { default: null } },
-    parseDOM: [
-        {
-            style: 'font-size',
-            getAttrs: (value) => {
-                // If size is 0px or empty, ignore and use default
-                if (!value || value === '0px')
-                    return { size: null };
-                return { size: value };
-            }
-        }
-    ],
-    toDOM(mark) {
-        if (!mark.attrs['size']) {
-            return ['span', 0];
-        }
-        return ['span', { style: `font-size: ${mark.attrs['size']}` }, 0];
-    }
-});
-// Final Schema
-const editorSchema = new Schema({
-    nodes: addListNodes(schema.spec.nodes, 'paragraph block*', 'block')
-        .append(myTableNodes)
-        .update('paragraph', paragraphWithAlignAndIndent)
-        .update('heading', headingWithAlign)
-        .update('image', imageNode),
-    marks
-});
-
-function buildKeymap(schema) {
-    const keys = {};
-    // Basic formatting shortcuts
-    if (schema.marks['bold'])
-        keys["Mod-b"] = toggleMark(schema.marks['bold']);
-    if (schema.marks['italic'])
-        keys["Mod-i"] = toggleMark(schema.marks['italic']);
-    if (schema.marks['underline'])
-        keys["Mod-u"] = toggleMark(schema.marks['underline']);
-    if (schema.marks['strike'])
-        keys["Mod-Shift-x"] = toggleMark(schema.marks['strike']);
-    if (schema.marks['sup'])
-        keys["Mod-Shift-+"] = toggleMark(schema.marks['sup']);
-    if (schema.marks['sub'])
-        keys["Mod-="] = toggleMark(schema.marks['sub']);
-    keys["Mod-z"] = undo;
-    keys["Mod-y"] = redo;
-    return keymap(keys);
-}
-
-//
-const tablePlugins = [
-    columnResizing({ handleWidth: 5, cellMinWidth: 25 }),
-    tableEditing()
-];
-const collapseEmptyParas = new Plugin({
-    appendTransaction(transactions, oldState, newState) {
-        let tr = newState.tr;
-        let modified = false;
-        newState.doc.descendants((node, pos) => {
-            if (node.type.name === "paragraph" && node.content.size === 0) {
-                const next = newState.doc.nodeAt(pos + node.nodeSize);
-                if (next && next.type.name === "paragraph" && next.content.size === 0) {
-                    tr.delete(pos, pos + node.nodeSize);
-                    modified = true;
-                }
-            }
-        });
-        return modified ? tr : null;
-    },
-});
-function imageResizePlugin() {
-    return new Plugin({
-        props: {
-            decorations(state) {
-                const decorations = [];
-                state.doc.descendants((node, pos) => {
-                    if (node.type.name === "image") {
-                        const deco = Decoration.node(pos, pos + 1, {
-                            class: "resizable-image"
-                        });
-                        decorations.push(deco);
-                    }
-                });
-                return DecorationSet.create(state.doc, decorations);
-            },
-            handleDOMEvents: {
-                mousedown(view, event) {
-                    const target = event.target;
-                    if (target.nodeName === "IMG") {
-                        const img = target;
-                        let startX = event.clientX;
-                        let startWidth = img.width;
-                        function onMouseMove(e) {
-                            const diff = e.clientX - startX;
-                            const newWidth = Math.max(50, startWidth + diff); // min width 50px
-                            img.setAttribute("width", newWidth.toString());
-                        }
-                        function onMouseUp(e) {
-                            window.removeEventListener("mousemove", onMouseMove);
-                            window.removeEventListener("mouseup", onMouseUp);
-                            // update ProseMirror state with new width
-                            const pos = view.posAtDOM(img, 0);
-                            const tr = view.state.tr.setNodeMarkup(pos, undefined, {
-                                ...view.state.doc.nodeAt(pos).attrs,
-                                width: img.getAttribute("width"),
-                            });
-                            view.dispatch(tr);
-                        }
-                        window.addEventListener("mousemove", onMouseMove);
-                        window.addEventListener("mouseup", onMouseUp);
-                        return true;
-                    }
-                    return false;
-                }
-            }
-        }
-    });
-}
-function linkClickPlugin() {
-    return new Plugin({
-        props: {
-            handleDOMEvents: {
-                click(view, event) {
-                    let target = event.target;
-                    console.log('Clicked element:', target);
-                    // Walk up if inside bold/italic/etc inside <a>
-                    while (target && target.tagName !== 'A' && target !== view.dom) {
-                        target = target.parentElement;
-                    }
-                    if (target && target.tagName === 'A') {
-                        const href = target.getAttribute('href');
-                        const targetAttr = target.getAttribute('target') || '_self';
-                        if (href) {
-                            // stop ProseMirror default
-                            event.preventDefault();
-                            window.open(href, targetAttr);
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }
-        }
-    });
-}
-// Centralize all editor plugins here
-const editorPlugins = [
-    buildKeymap(editorSchema),
-    keymap(baseKeymap), // default keyboard shortcuts
-    history(), // undo/redo
-    ...tablePlugins,
-    imageResizePlugin(),
-    collapseEmptyParas,
-    linkClickPlugin()
-];
+import { toggleMark, setBlockType, baseKeymap } from 'prosemirror-commands';
+import { undo, redo, history } from 'prosemirror-history';
+import { liftListItem, wrapInList, addListNodes, sinkListItem } from 'prosemirror-schema-list';
+import { schema } from 'prosemirror-schema-basic';
+import { tableNodes, columnResizing, tableEditing } from 'prosemirror-tables';
+import { keymap } from 'prosemirror-keymap';
 
 class TextFormatComponent {
     content;
@@ -698,6 +386,191 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImpo
                 type: Input
             }] } });
 
+// with required cellAttributes
+const myTableNodes = tableNodes({
+    tableGroup: 'block',
+    cellContent: 'block+',
+    cellAttributes: {
+        style: { default: null },
+        class: { default: null },
+        backgroundColor: {
+            default: null, getFromDOM(dom) {
+                return dom.style.backgroundColor || null;
+            },
+            setDOMAttr(value, attrs) {
+                if (value)
+                    attrs['style'] = (attrs['style'] || "") + `background-color:${value};`;
+            }
+        },
+    },
+});
+// MARKS DEFINITIONS
+// Font family
+const fontFamilyMark = {
+    attrs: { font: { default: null } },
+    parseDOM: [{ style: 'font-family', getAttrs: (value) => ({ font: value }) }],
+    toDOM: mark => ['span', { style: `font-family: ${mark.attrs['font']}` }, 0]
+};
+// Text color and background color
+const COLORS = [
+    '#b71c1c', '#d32f2f', '#e53935', '#f46136', '#f57c00', '#ff9800', '#ffb200', '#ffeb3b', '#333',
+    '#1b5e20', '#388e3c', '#4caf50', '#81c784', '#0d47a1', '#1976d2', '#2196f3', '#64b5f6'
+];
+function createColorMark(name, cssProp) {
+    return {
+        attrs: { color: {} },
+        parseDOM: COLORS.map(c => ({ style: cssProp, getAttrs: value => ({ color: value }) })),
+        toDOM: node => ['span', { style: `${cssProp}: ${node.attrs['color']}` }, 0]
+    };
+}
+// Link mark
+const linkMark = {
+    attrs: { href: {}, title: { default: null }, class: { default: null }, style: { default: null }, target: { default: '_blank' } },
+    inclusive: false,
+    parseDOM: [{
+            tag: 'a[href]',
+            getAttrs(dom) {
+                return {
+                    href: dom.getAttribute('href'),
+                    title: dom.getAttribute('title'),
+                    class: dom.getAttribute('class'),
+                    style: dom.getAttribute('style'),
+                    target: dom.getAttribute('target') || '_blank',
+                };
+            }
+        }],
+    toDOM(node) {
+        return ['a', { ...node.attrs }, 0];
+    }
+};
+// NODE DEFINITIONS
+// Paragraph with alignment
+const paragraphWithAlignAndIndent = {
+    ...schema.spec.nodes.get('paragraph'),
+    attrs: { align: { default: 'left' }, indent: { default: 0 } },
+    parseDOM: [{ tag: 'p', getAttrs: (dom) => ({ align: dom.style.textAlign || 'left', indent: parseInt(dom.style.marginLeft) / 30 || 0 }) }],
+    toDOM: (node) => ['p', { style: `text-align:${node.attrs.align}; margin-left:${node.attrs.indent * 30}px` }, 0]
+};
+// Heading with alignment
+const headingWithAlign = {
+    ...schema.spec.nodes.get('heading'),
+    attrs: { ...schema.spec.nodes.get('heading')?.attrs, align: { default: 'left' } },
+    parseDOM: Array.from({ length: 6 }).map((_, i) => ({
+        tag: `h${i + 1}`,
+        getAttrs: (dom) => ({ level: i + 1, align: dom.style.textAlign || 'left' })
+    })),
+    toDOM: (node) => [`h${node.attrs.level}`, { style: `text-align:${node.attrs.align}` }, 0]
+};
+// Image node (resizable via style max-width)
+const imageNode = {
+    inline: true,
+    attrs: { src: {}, alt: { default: null }, title: { default: null }, width: { default: 'auto' }, height: { default: 'auto' }, align: { default: 'center' } },
+    group: 'inline',
+    draggable: true,
+    parseDOM: [{
+            tag: 'img[src]',
+            getAttrs: (dom) => ({
+                src: dom.getAttribute('src'),
+                title: dom.getAttribute('title'),
+                alt: dom.getAttribute('alt'),
+                width: dom.getAttribute('width'),
+                height: dom.getAttribute('height'),
+                align: dom.style.textAlign || 'center',
+            })
+        }],
+    toDOM: (node) => ['img', {
+            src: node.attrs.src,
+            title: node.attrs.title,
+            alt: node.attrs.alt,
+            width: node.attrs.width,
+            height: node.attrs.height,
+            style: 'max-width: {node.attrs.width}; height: {node.attrs.height}; cursor:nwse-resize; text-align:${node.attrs.align}',
+        }]
+};
+// const imageNode: NodeSpec = {
+//     inline: true,
+//     group: 'inline',
+//     draggable: true,
+//     attrs: {
+//         src: {},
+//         alt: { default: null },
+//         title: { default: null },
+//         width: { default: null },
+//         height: { default: null },
+//         align: { default: 'center' },
+//     },
+//     parseDOM: [{
+//         tag: 'img[src]',
+//         getAttrs(dom: HTMLElement) {
+//             return {
+//                 src: dom.getAttribute('src'),
+//                 title: dom.getAttribute('title'),
+//                 alt: dom.getAttribute('alt'),
+//                 width: dom.getAttribute('width'),
+//                 height: dom.getAttribute('height'),
+//                 align: dom.getAttribute('align') || 'center',
+//             };
+//         },
+//     }],
+//     toDOM(node) {
+//         return ['img', {
+//             src: node.attrs['src'],
+//             title: node.attrs['title'],
+//             alt: node.attrs['alt'],
+//             width: node.attrs['width'] || undefined,
+//             height: node.attrs['height'] || undefined,
+//             style: `display:block; margin:0 auto; max-width:${node.attrs['width'] || '100%'}; height:${node.attrs['height'] || 'auto'};
+//                     text-align:${node.attrs['align']}; cursor: nwse-resize;`
+//             .trim(),
+//         }];
+//     },
+// };
+// MARKS COLLECTION
+let marks = schema.spec.marks;
+// remove
+//     ? basicSchema.spec.marks.remove('size')
+//     : basicSchema.spec.marks;
+marks = marks
+    .update('sup', { parseDOM: [{ tag: 'sup' }], toDOM: () => ['sup', 0] })
+    .update('sub', { parseDOM: [{ tag: 'sub' }], toDOM: () => ['sub', 0] })
+    .update('bold', { parseDOM: [{ tag: 'strong' }, { style: 'font-weight', getAttrs: v => v === 'bold' && null }], toDOM: () => ['strong', 0] })
+    .update('italic', { parseDOM: [{ tag: 'em' }, { style: 'font-style', getAttrs: v => v === 'italic' && null }], toDOM: () => ['em', 0] })
+    .update('underline', { parseDOM: [{ tag: 'u' }, { style: 'text-decoration', getAttrs: v => v === 'underline' && null }], toDOM: () => ['u', 0] })
+    .update('strike', { parseDOM: [{ tag: 's' }, { tag: 'del' }, { style: 'text-decoration', getAttrs: v => v === 'line-through' && null }], toDOM: () => ['s', 0] })
+    .update('bgColor', createColorMark('bgColor', 'background-color'))
+    .update('textColor', createColorMark('textColor', 'color'))
+    .update('fontFamily', fontFamilyMark)
+    .update('link', linkMark)
+    .update('fontSize', {
+    attrs: { size: { default: null } },
+    parseDOM: [
+        {
+            style: 'font-size',
+            getAttrs: (value) => {
+                // If size is 0px or empty, ignore and use default
+                if (!value || value === '0px')
+                    return { size: null };
+                return { size: value };
+            }
+        }
+    ],
+    toDOM(mark) {
+        if (!mark.attrs['size']) {
+            return ['span', 0];
+        }
+        return ['span', { style: `font-size: ${mark.attrs['size']}` }, 0];
+    }
+});
+// Final Schema
+const editorSchema = new Schema({
+    nodes: addListNodes(schema.spec.nodes, 'paragraph block*', 'block')
+        .append(myTableNodes)
+        .update('paragraph', paragraphWithAlignAndIndent)
+        .update('heading', headingWithAlign)
+        .update('image', imageNode),
+    marks
+});
+
 class ImageComponent {
     content;
     showImageDialog = false;
@@ -895,17 +768,143 @@ class ToolbarComponent {
 }
 i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: ToolbarComponent, decorators: [{
             type: Component,
-            args: [{ selector: 'app-toolbar-component', imports: [TextFormatComponent, HeadingComponent, SuperSubFormat, UndoRedo, Alignment, ColorFormat, ListFormat, SourceCode, LinkComponent, ImageComponent, FontSizeComponent, IndentOutdentComponent, FontFamilyComponent], template: "<div class=\"btn-toolbar mb-2 border p-1 bg-light rounded alugn-items-center\" role=\"toolbar\" aria-label=\"Toolbar with button groups\">\n    <app-text-format-component [content]=\"content\"></app-text-format-component>\n    <app-heading-component [content]=\"content\"></app-heading-component>\n    <app-font-size [content]=\"content\"></app-font-size>\n    <app-font-family [content]=\"content\"></app-font-family>\n    <app-super-sub-format [content]=\"content\"></app-super-sub-format>\n    <app-undo-redo [content]=\"content\"></app-undo-redo>\n    <app-alignment [content]=\"content\"></app-alignment>\n    <app-list-format [content]=\"content\"></app-list-format>\n    <app-indent-outdent [content]=\"content\"></app-indent-outdent>\n    <app-link [content]=\"content\"></app-link>\n    <app-color-format [content]=\"content\"></app-color-format>\n    <app-image [content]=\"content\"></app-image>\n    <!-- <app-source-code [content]=\"content\"></app-source-code> -->\n</div>" }]
+            args: [{ selector: 'app-toolbar-component', standalone: true, imports: [TextFormatComponent, HeadingComponent, SuperSubFormat, UndoRedo, Alignment, ColorFormat, ListFormat, SourceCode, LinkComponent, ImageComponent, FontSizeComponent, IndentOutdentComponent, FontFamilyComponent], template: "<div class=\"btn-toolbar mb-2 border p-1 bg-light rounded alugn-items-center\" role=\"toolbar\" aria-label=\"Toolbar with button groups\">\n    <app-text-format-component [content]=\"content\"></app-text-format-component>\n    <app-heading-component [content]=\"content\"></app-heading-component>\n    <app-font-size [content]=\"content\"></app-font-size>\n    <app-font-family [content]=\"content\"></app-font-family>\n    <app-super-sub-format [content]=\"content\"></app-super-sub-format>\n    <app-undo-redo [content]=\"content\"></app-undo-redo>\n    <app-alignment [content]=\"content\"></app-alignment>\n    <app-list-format [content]=\"content\"></app-list-format>\n    <app-indent-outdent [content]=\"content\"></app-indent-outdent>\n    <app-link [content]=\"content\"></app-link>\n    <app-color-format [content]=\"content\"></app-color-format>\n    <app-image [content]=\"content\"></app-image>\n    <!-- <app-source-code [content]=\"content\"></app-source-code> -->\n</div>" }]
         }], propDecorators: { content: [{
                 type: Input
             }] } });
 
-class InventyvHtmlEditorComponent {
+function buildKeymap(schema) {
+    const keys = {};
+    // Basic formatting shortcuts
+    if (schema.marks['bold'])
+        keys["Mod-b"] = toggleMark(schema.marks['bold']);
+    if (schema.marks['italic'])
+        keys["Mod-i"] = toggleMark(schema.marks['italic']);
+    if (schema.marks['underline'])
+        keys["Mod-u"] = toggleMark(schema.marks['underline']);
+    if (schema.marks['strike'])
+        keys["Mod-Shift-x"] = toggleMark(schema.marks['strike']);
+    if (schema.marks['sup'])
+        keys["Mod-Shift-+"] = toggleMark(schema.marks['sup']);
+    if (schema.marks['sub'])
+        keys["Mod-="] = toggleMark(schema.marks['sub']);
+    keys["Mod-z"] = undo;
+    keys["Mod-y"] = redo;
+    return keymap(keys);
+}
+
+//
+const tablePlugins = [
+    columnResizing({ handleWidth: 5, cellMinWidth: 25 }),
+    tableEditing()
+];
+const collapseEmptyParas = new Plugin({
+    appendTransaction(transactions, oldState, newState) {
+        let tr = newState.tr;
+        let modified = false;
+        newState.doc.descendants((node, pos) => {
+            if (node.type.name === "paragraph" && node.content.size === 0) {
+                const next = newState.doc.nodeAt(pos + node.nodeSize);
+                if (next && next.type.name === "paragraph" && next.content.size === 0) {
+                    tr.delete(pos, pos + node.nodeSize);
+                    modified = true;
+                }
+            }
+        });
+        return modified ? tr : null;
+    },
+});
+function imageResizePlugin() {
+    return new Plugin({
+        props: {
+            decorations(state) {
+                const decorations = [];
+                state.doc.descendants((node, pos) => {
+                    if (node.type.name === "image") {
+                        const deco = Decoration.node(pos, pos + 1, {
+                            class: "resizable-image"
+                        });
+                        decorations.push(deco);
+                    }
+                });
+                return DecorationSet.create(state.doc, decorations);
+            },
+            handleDOMEvents: {
+                mousedown(view, event) {
+                    const target = event.target;
+                    if (target.nodeName === "IMG") {
+                        const img = target;
+                        let startX = event.clientX;
+                        let startWidth = img.width;
+                        function onMouseMove(e) {
+                            const diff = e.clientX - startX;
+                            const newWidth = Math.max(50, startWidth + diff); // min width 50px
+                            img.setAttribute("width", newWidth.toString());
+                        }
+                        function onMouseUp(e) {
+                            window.removeEventListener("mousemove", onMouseMove);
+                            window.removeEventListener("mouseup", onMouseUp);
+                            // update ProseMirror state with new width
+                            const pos = view.posAtDOM(img, 0);
+                            const tr = view.state.tr.setNodeMarkup(pos, undefined, {
+                                ...view.state.doc.nodeAt(pos).attrs,
+                                width: img.getAttribute("width"),
+                            });
+                            view.dispatch(tr);
+                        }
+                        window.addEventListener("mousemove", onMouseMove);
+                        window.addEventListener("mouseup", onMouseUp);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+    });
+}
+function linkClickPlugin() {
+    return new Plugin({
+        props: {
+            handleDOMEvents: {
+                click(view, event) {
+                    let target = event.target;
+                    console.log('Clicked element:', target);
+                    // Walk up if inside bold/italic/etc inside <a>
+                    while (target && target.tagName !== 'A' && target !== view.dom) {
+                        target = target.parentElement;
+                    }
+                    if (target && target.tagName === 'A') {
+                        const href = target.getAttribute('href');
+                        const targetAttr = target.getAttribute('target') || '_self';
+                        if (href) {
+                            // stop ProseMirror default
+                            event.preventDefault();
+                            window.open(href, targetAttr);
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+    });
+}
+// Centralize all editor plugins here
+const editorPlugins = [
+    buildKeymap(editorSchema),
+    keymap(baseKeymap), // default keyboard shortcuts
+    history(), // undo/redo
+    ...tablePlugins,
+    imageResizePlugin(),
+    collapseEmptyParas,
+    linkClickPlugin()
+];
+
+class HtmlEditorComponent {
     editorHost;
-    // @Input() html: EditorView;
     contentTemplate;
     html;
-    ngAfterViewInit() {
+    ngOnInit() {
         console.log("Content template ", this.contentTemplate);
         const state = EditorState.create({
             schema: editorSchema,
@@ -943,16 +942,31 @@ class InventyvHtmlEditorComponent {
         wrapper.appendChild(fragment);
         return wrapper.innerHTML;
     }
-    static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
-    static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: InventyvHtmlEditorComponent, isStandalone: true, selector: "lib-inventyv-html-editor", inputs: { contentTemplate: "contentTemplate" }, viewQueries: [{ propertyName: "editorHost", first: true, predicate: ["editorHost"], descendants: true, static: true }], ngImport: i0, template: "<p>inventyv-html-editor works!</p>\n<!-- Toolbar -->\n<app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"], dependencies: [{ kind: "component", type: ToolbarComponent, selector: "app-toolbar-component", inputs: ["content"] }, { kind: "ngmodule", type: FormsModule }] });
+    static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: HtmlEditorComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
+    static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: HtmlEditorComponent, isStandalone: true, selector: "lib-html-editor", inputs: { contentTemplate: "contentTemplate" }, viewQueries: [{ propertyName: "editorHost", first: true, predicate: ["editorHost"], descendants: true, static: true }], ngImport: i0, template: "<p>html-editor works!</p>\n<!-- Toolbar -->\n<app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>", styles: [""], dependencies: [{ kind: "ngmodule", type: FormsModule }, { kind: "component", type: ToolbarComponent, selector: "app-toolbar-component", inputs: ["content"] }] });
 }
-i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, decorators: [{
+i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: HtmlEditorComponent, decorators: [{
             type: Component,
-            args: [{ selector: 'lib-inventyv-html-editor', standalone: true, imports: [NgFor, ToolbarComponent, FormsModule], template: "<p>inventyv-html-editor works!</p>\n<!-- Toolbar -->\n<app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"] }]
+            args: [{ selector: 'lib-html-editor', standalone: true, imports: [NgFor, FormsModule, ToolbarComponent], template: "<p>html-editor works!</p>\n<!-- Toolbar -->\n<app-toolbar-component [content]=\"contentTemplate\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"border rounded p-2\" style=\"min-height:75vh;\"></div>" }]
         }], propDecorators: { editorHost: [{
                 type: ViewChild,
                 args: ['editorHost', { static: true }]
             }], contentTemplate: [{
+                type: Input
+            }] } });
+
+class InventyvHtmlEditorComponent {
+    contentTemplate;
+    ngOnInit() {
+        console.log("Content template ", this.contentTemplate);
+    }
+    static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
+    static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: InventyvHtmlEditorComponent, isStandalone: true, selector: "lib-inventyv-html-editor", inputs: { contentTemplate: "contentTemplate" }, ngImport: i0, template: "<p>inventyv-html-editor works!</p>\n<lib-html-editor [contentTemplate]=\"contentTemplate\"></lib-html-editor>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"], dependencies: [{ kind: "component", type: HtmlEditorComponent, selector: "lib-html-editor", inputs: ["contentTemplate"] }] });
+}
+i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, decorators: [{
+            type: Component,
+            args: [{ selector: 'lib-inventyv-html-editor', imports: [HtmlEditorComponent], template: "<p>inventyv-html-editor works!</p>\n<lib-html-editor [contentTemplate]=\"contentTemplate\"></lib-html-editor>", styles: [".editor-container{max-height:100vh;background:#fff}.ProseMirror{outline:none;white-space:pre-wrap;max-height:74vh;overflow-y:scroll}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"] }]
+        }], propDecorators: { contentTemplate: [{
                 type: Input
             }] } });
 
@@ -964,5 +978,5 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImpo
  * Generated bundle index. Do not edit.
  */
 
-export { InventyvHtmlEditorComponent };
+export { HtmlEditorComponent, InventyvHtmlEditorComponent, ToolbarComponent };
 //# sourceMappingURL=inventyv-editor.mjs.map
