@@ -32,9 +32,6 @@ class TextFormatComponent {
         toggleMark(this.content.state.schema.marks['strike'])(this.content.state, this.content.dispatch);
         this.content.focus();
     }
-    ngOnInit() {
-        console.log("Text format content ", this.content);
-    }
     static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: TextFormatComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
     static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: TextFormatComponent, isStandalone: true, selector: "app-text-format-component", inputs: { content: "content" }, ngImport: i0, template: "<div class=\"btn-group\">\n    <button class=\"btn toolbar-button fs-12\" (click)=\"toggleBold()\" title=\"Bold\"><i class=\"fas fa-bold\"></i></button>\n    <button class=\"btn toolbar-button fs-12\" (click)=\"toggleItalic()\" title=\"Italic\"><i class=\"fas fa-italic\"></i></button>\n    <button class=\"btn toolbar-button fs-12\" (click)=\"toggleUnderLine()\" title=\"Underline\"><i class=\"fas fa-underline\"></i></button>\n    <button class=\"btn toolbar-button fs-12\" (click)=\"toggleStrike()\" title=\"Strike\"><i class=\"fas fa-strikethrough\"></i></button>\n</div>", styles: [""] });
 }
@@ -766,9 +763,6 @@ i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImpo
 
 class ToolbarComponent {
     content;
-    ngOnInit() {
-        console.log("Toolbar content ", this.content);
-    }
     static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: ToolbarComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
     static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: ToolbarComponent, isStandalone: true, selector: "app-toolbar-component", inputs: { content: "content" }, ngImport: i0, template: "<div class=\"btn-toolbar mb-2 border p-1 bg-light rounded alugn-items-center\" role=\"toolbar\" aria-label=\"Toolbar with button groups\">\n    <app-text-format-component [content]=\"content\"></app-text-format-component>\n    <app-font-size [content]=\"content\"></app-font-size>\n    <app-font-family [content]=\"content\"></app-font-family>\n    <app-super-sub-format [content]=\"content\"></app-super-sub-format>\n    <app-undo-redo [content]=\"content\"></app-undo-redo>\n    <app-alignment [content]=\"content\"></app-alignment>\n    <app-list-format [content]=\"content\"></app-list-format>\n    <app-indent-outdent [content]=\"content\"></app-indent-outdent>\n    <app-link [content]=\"content\"></app-link>\n    <app-color-format [content]=\"content\"></app-color-format>\n    <app-image [content]=\"content\"></app-image>\n    <!-- <app-source-code [content]=\"content\"></app-source-code> -->\n</div>", styles: [""], dependencies: [{ kind: "component", type: TextFormatComponent, selector: "app-text-format-component", inputs: ["content"] }, { kind: "component", type: SuperSubFormat, selector: "app-super-sub-format", inputs: ["content"] }, { kind: "component", type: UndoRedo, selector: "app-undo-redo", inputs: ["content"] }, { kind: "component", type: Alignment, selector: "app-alignment", inputs: ["content"] }, { kind: "component", type: ColorFormat, selector: "app-color-format", inputs: ["content"] }, { kind: "component", type: ListFormat, selector: "app-list-format", inputs: ["content"] }, { kind: "component", type: LinkComponent, selector: "app-link", inputs: ["content"] }, { kind: "component", type: ImageComponent, selector: "app-image", inputs: ["content"] }, { kind: "component", type: FontSizeComponent, selector: "app-font-size", inputs: ["content"] }, { kind: "component", type: IndentOutdentComponent, selector: "app-indent-outdent", inputs: ["content"] }, { kind: "component", type: FontFamilyComponent, selector: "app-font-family", inputs: ["content"] }] });
 }
@@ -956,6 +950,7 @@ class InventyvHtmlEditorComponent {
         return wrapper.innerHTML;
     }
     ngOnChanges(changes) {
+        console.log("ngOnChanges called with changes: ", changes);
         if (changes['contentTemplate'] && !changes['contentTemplate'].firstChange) {
             this.setContentFromHTML(this.contentTemplate);
             console.log("Content template changed: ", this.contentTemplate);
