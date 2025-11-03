@@ -911,10 +911,7 @@ class InventyvHtmlEditorComponent {
                 schema: editorSchema,
                 plugins: editorPlugins
             });
-            if (!this.editorHost?.nativeElement) {
-                console.error('Editor host element not found!');
-                return;
-            }
+            console.log('🔥 Initial Editor State:', state);
             this.html = new EditorView(this.editorHost.nativeElement, {
                 state,
                 dispatchTransaction: tr => {
@@ -923,7 +920,7 @@ class InventyvHtmlEditorComponent {
                     const updatedHTML = this.getHTML();
                     this.contentTemplate = updatedHTML;
                     this.contentTemplateChange.emit(updatedHTML);
-                    console.log("Updated HTML content: ", updatedHTML);
+                    console.log('🔥 Editor content updated:', updatedHTML);
                 }
             });
             // Load initial HTML
@@ -949,15 +946,8 @@ class InventyvHtmlEditorComponent {
         wrapper.appendChild(fragment);
         return wrapper.innerHTML;
     }
-    ngOnChanges(changes) {
-        console.log("ngOnChanges called with changes: ", changes);
-        if (changes['contentTemplate'] && !changes['contentTemplate'].firstChange) {
-            this.setContentFromHTML(this.contentTemplate);
-            console.log("Content template changed: ", this.contentTemplate);
-        }
-    }
     static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
-    static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: InventyvHtmlEditorComponent, isStandalone: true, selector: "lib-inventyv-html-editor", inputs: { contentTemplate: "contentTemplate" }, outputs: { contentTemplateChange: "contentTemplateChange" }, viewQueries: [{ propertyName: "editorHost", first: true, predicate: ["editorHost"], descendants: true }], usesOnChanges: true, ngImport: i0, template: "<!-- Toolbar -->\n<app-toolbar-component *ngIf=\"html\" [content]=\"html\" class=\"lib-html-editor-toolbar\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"lib-html-editor-content\"></div>", styles: [".editor-container{background:#fff}.ProseMirror{outline:none;white-space:pre-wrap}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.ProseMirror:focus-visible{outline:none!important;box-shadow:none!important}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"], dependencies: [{ kind: "directive", type: NgIf, selector: "[ngIf]", inputs: ["ngIf", "ngIfThen", "ngIfElse"] }, { kind: "ngmodule", type: FormsModule }, { kind: "component", type: ToolbarComponent, selector: "app-toolbar-component", inputs: ["content"] }], encapsulation: i0.ViewEncapsulation.None });
+    static ɵcmp = i0.ɵɵngDeclareComponent({ minVersion: "14.0.0", version: "19.2.15", type: InventyvHtmlEditorComponent, isStandalone: true, selector: "lib-inventyv-html-editor", inputs: { contentTemplate: "contentTemplate" }, outputs: { contentTemplateChange: "contentTemplateChange" }, viewQueries: [{ propertyName: "editorHost", first: true, predicate: ["editorHost"], descendants: true }], ngImport: i0, template: "<!-- Toolbar -->\n<app-toolbar-component *ngIf=\"html\" [content]=\"html\" class=\"lib-html-editor-toolbar\"></app-toolbar-component>\n<!-- Editor Area -->\n<div #editorHost class=\"lib-html-editor-content\"></div>", styles: [".editor-container{background:#fff}.ProseMirror{outline:none;white-space:pre-wrap}.ProseMirror p{margin:0 0 1em}.ProseMirror table{border-collapse:collapse;width:100%}.ProseMirror table,.ProseMirror th,.ProseMirror td{border:1px solid #c9c9c9}.ProseMirror th,.ProseMirror td{padding:4px;text-align:left}.ProseMirror:focus-visible{outline:none!important;box-shadow:none!important}.tableWrapper{overflow-x:auto}th{font-weight:400}.color-grid{display:grid;grid-template-columns:repeat(8,24px);gap:4px}.dropdown-item:hover{background-color:#d6d6d6;color:#000}.toolbar-button:hover{background-color:#d6d6d6!important;color:#000!important}.toolbar-button{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem}.btn-group{border-radius:0%;border-right:1px solid #c9c9c9!important}.toolbar-button:disabled{border:none!important}.font-size-menu{min-width:50px!important}.font-family-dropdown{max-height:30px!important}.fs-6{font-size:12px!important}select.form-select{border:none!important;border-radius:0%!important;--bs-btn-padding-x: .6rem;font-size:12px!important}select.form-select option{padding:4px 8px;transition:background-color .2s ease,color .2s ease}select.form-select option:hover{background-color:#e0e0e0;color:#333}a:hover{color:#00008b;cursor:pointer}\n"], dependencies: [{ kind: "directive", type: NgIf, selector: "[ngIf]", inputs: ["ngIf", "ngIfThen", "ngIfElse"] }, { kind: "ngmodule", type: FormsModule }, { kind: "component", type: ToolbarComponent, selector: "app-toolbar-component", inputs: ["content"] }], encapsulation: i0.ViewEncapsulation.None });
 }
 i0.ɵɵngDeclareClassMetadata({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, decorators: [{
             type: Component,
