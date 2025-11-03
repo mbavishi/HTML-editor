@@ -929,6 +929,7 @@ class InventyvHtmlEditorComponent {
                     const updatedHTML = this.getHTML();
                     this.contentTemplate = updatedHTML;
                     this.contentTemplateChange.emit(updatedHTML);
+                    console.log("Updated HTML content: ", updatedHTML);
                 }
             });
             // Load initial HTML
@@ -957,6 +958,7 @@ class InventyvHtmlEditorComponent {
     ngOnChanges(changes) {
         if (changes['contentTemplate'] && !changes['contentTemplate'].firstChange) {
             this.setContentFromHTML(this.contentTemplate);
+            console.log("Content template changed: ", this.contentTemplate);
         }
     }
     static ɵfac = i0.ɵɵngDeclareFactory({ minVersion: "12.0.0", version: "19.2.15", ngImport: i0, type: InventyvHtmlEditorComponent, deps: [], target: i0.ɵɵFactoryTarget.Component });
