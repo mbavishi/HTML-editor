@@ -36,7 +36,6 @@
     "prosemirror-tables": "^1.8.1",
     "prosemirror-view": "^1.41.3",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
@@ -60,5 +59,10 @@
       "types": "./dist/inventyv-editor/index.d.ts",
       "default": "./dist/inventyv-editor/fesm2022/inventyv-editor.mjs"
     }
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "bootstrap": "^5.3.8"
   }
 }
